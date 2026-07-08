@@ -102,7 +102,7 @@ html = f"""
         <img src="{img_url}"
              style="width:280px; max-width:90%; cursor:pointer; border-radius:20px;">
     </a>
-    <p style="font-size:0.95rem; margin-top:8px;">👆 소라 사진을 눌러 답변을 들어보세요!</p>
+    <p style="font-size:0.95rem; margin-top:8px;">👆 소라를 눌러 답변을 들어보세요!</p>
 </div>
 """
 
