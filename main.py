@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import random
-from streamlit_click_detector import click_detector
+from st_click_detector import click_detector
 
 st.set_page_config(
     page_title="신비한 소라의 대답",
