@@ -1,106 +1,130 @@
 import streamlit as st
 import pandas as pd
 import random
-import base64
-import requests
+from streamlit_click_detector import click_detector
 
-# 페이지 기본 설정
-st.set_page_config(page_title="신비한 소라의 대답 🐚", page_icon="🐚", layout="centered")
-
-# CSS 스타일 (검은 배경 + 반투명 답변 박스 + 애니메이션 효과)
-st.markdown(
-    """
-    <style>
-    body {
-        background-color: #000000;
-        color: #ffffff;
-        font-family: 'Nanum Gothic', sans-serif;
-    }
-    .title {
-        font-size: 2.2em;
-        text-align: center;
-        color: #b3e5fc;
-        text-shadow: 0px 0px 15px #80deea;
-        margin-top: 20px;
-    }
-    .question-box {
-        text-align: center;
-        font-size: 1.2em;
-        color: #e0f7fa;
-        margin-bottom: 10px;
-    }
-    .magic-image {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        width: 250px;
-        cursor: pointer;
-        transition: transform 0.3s ease;
-    }
-    .magic-image:hover {
-        transform: scale(1.1);
-        filter: drop-shadow(0px 0px 10px #80deea);
-    }
-    .answer-box {
-        margin-top: 25px;
-        text-align: center;
-        font-size: 1.4em;
-        color: #000000;
-        background-color: rgba(255, 255, 255, 0.5);
-        border-radius: 15px;
-        padding: 20px;
-        width: 80%;
-        margin-left: auto;
-        margin-right: auto;
-        box-shadow: 0px 0px 15px rgba(255,255,255,0.3);
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
+st.set_page_config(
+    page_title="신비한 소라의 대답",
+    page_icon="🐚",
+    layout="centered"
 )
 
-# 제목
-st.markdown("<div class='title'>🔮 신비한 소라의 대답 🐚</div>", unsafe_allow_html=True)
-st.markdown("<div class='question-box'>마음 속으로 생각한 질문을 말해 보세요... 🌙</div>", unsafe_allow_html=True)
+st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(180deg, #0077b6 0%, #00b4d8 50%, #90e0ef 100%);
+    color: white;
+}
 
-# 사용자 질문 입력
-user_question = st.text_input("✨ 당신의 질문을 입력하세요", placeholder="예: 내일은 좋은 일이 생길까?")
+h1, h2, h3, p, label, div {
+    color: white !important;
+}
 
-# 엑셀 파일에서 답변 불러오기
+[data-testid="stTextInput"] label {
+    color: white !important;
+    font-weight: bold;
+}
+
+.stTextInput input {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: black !important;
+    border-radius: 12px;
+}
+
+.title {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: bold;
+    margin-top: 30px;
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 25px;
+}
+
+.answer-box {
+    margin-top: 25px;
+    padding: 24px;
+    border-radius: 20px;
+    background-color: rgba(0, 48, 73, 0.65);
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+.answer-title {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.answer-text {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.warning-box {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 16px;
+    background-color: rgba(255, 255, 255, 0.25);
+    text-align: center;
+    font-weight: bold;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("<div class='title'>🐚 신비한 소라의 대답</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>마음속으로 생각한 질문을 말해 보세요...</div>", unsafe_allow_html=True)
+
+user_question = st.text_input(
+    "✨ 당신의 질문을 입력하세요",
+    placeholder="예: 내일은 좋은 일이 생길까?",
+    key="user_question"
+)
+
 try:
-    df = pd.read_excel('sora.xlsx')
+    df = pd.read_excel("sora.xlsx")
     answers = df.iloc[:, 0].dropna().tolist()
-except Exception as e:
+except Exception:
     st.error("⚠️ 'sora.xlsx' 파일을 불러오지 못했습니다. 파일이 같은 폴더에 있는지 확인하세요.")
     st.stop()
 
-# 이미지 로드 (base64 인코딩으로 클릭 이벤트 구현)
+if "last_answer" not in st.session_state:
+    st.session_state.last_answer = None
+
 img_url = "https://ramiteacher.github.io/conch/sora.png"
-response = requests.get(img_url)
-img_bytes = base64.b64encode(response.content).decode()
 
-# 이미지 클릭 처리 (st.image 자체로는 on_click 지원 안 함 → HTML image map 활용)
-st.markdown(
-    f"""
-    <div style="text-align:center;">
-        <form action="?clicked=true" method="get">
-            <input type="image" src="data:image/png;base64,{img_bytes}" class="magic-image" alt="신비한 소라" />
-        </form>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+html = f"""
+<div style="text-align:center;">
+    <a href="#" id="sora_click">
+        <img src="{img_url}"
+             style="width:280px; max-width:90%; cursor:pointer; border-radius:20px;">
+    </a>
+    <p style="font-size:0.95rem; margin-top:8px;">👆 소라 사진을 눌러 답변을 들어보세요!</p>
+</div>
+"""
 
-# 클릭 감지
-clicked = st.query_params.get("clicked", ["false"])[0] == "true"
+clicked = click_detector(html, key="sora_image_click")
 
-# 클릭 시 답변 출력
-if clicked:
-    if user_question.strip() == "":
-        st.warning("먼저 질문을 입력해 주세요 🌸")
-    else:
-        answer = random.choice(answers)
+if clicked == "sora_click":
+    if st.session_state.user_question.strip() == "":
+        st.session_state.last_answer = None
         st.markdown(
-            f"<div class='answer-box'>🌊 신비한 소라의 대답 🌊<br><br><b>{answer}</b></div>",
+            "<div class='warning-box'>먼저 질문을 입력해 주세요 😊</div>",
             unsafe_allow_html=True
         )
+    else:
+        st.session_state.last_answer = random.choice(answers)
+
+if st.session_state.last_answer:
+    st.markdown(
+        f"""
+        <div class="answer-box">
+            <div class="answer-title">🌊 신비한 소라의 대답</div>
+            <div class="answer-text">{st.session_state.last_answer}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
